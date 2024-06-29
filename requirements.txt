@@ -1,0 +1,9 @@
+tensorflow
+pillow
+flask
+flask_restx
+werkzeug
+numpy
+gevent
+gunicorn
+requests
