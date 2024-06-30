@@ -1,4 +1,4 @@
-# Brainhelath API
+# Brainhealth API
 
 API service for brainhealth mobile app
 
