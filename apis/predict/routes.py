@@ -16,6 +16,6 @@ class Predict(Resource):
         args = mri_image_parser.parse_args()
         file = args['file']
         if file.filename == '':
-            abort('No selected file', 400)
+            abort(400, 'No selected file')
         result = model.getPrediction(file)
         return jsonify({"result": result})

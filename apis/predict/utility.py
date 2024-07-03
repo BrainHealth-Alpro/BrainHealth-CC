@@ -5,8 +5,8 @@ import os
 
 class Predict:
     def __init__(self):
-        self.model = load_model('model.keras')
-        self.class_mappings = {0: 'Glioma', 1: 'Meninigioma', 2: 'Notumor', 3: 'Pituitary'}
+        self.model = load_model('model.h5')
+        self.class_mappings = {0: 'Glioma', 1: 'Meningioma', 2: 'Notumor', 3: 'Pituitary'}
 
     def load_and_preprocess_image(self, image_path, image_shape=(168, 168)):
         img = image.load_img(image_path, target_size=image_shape, color_mode='grayscale')
