@@ -2,8 +2,6 @@ from zipfile import ZipFile
 
 from apis.predict.utility import Predict
 import dicom2jpg
-import numpy as np
-import os
 
 
 class PredictBatch(Predict):
