@@ -9,5 +9,5 @@ api = Api(
     doc='/api/documentation/'
 )
 
-api.add_namespace(api_predict, path='/api/predict')
-api.add_namespace(api_predict_batch_file, path='/api/predict/batchFile')
+api.add_namespace(api_predict)
+api.add_namespace(api_predict_batch_file)
