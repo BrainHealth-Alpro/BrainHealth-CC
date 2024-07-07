@@ -6,6 +6,7 @@ from zipfile import ZipFile
 import tempfile
 import dicom2jpg
 import os
+import numpy as np
 
 
 class PredictBatchFile(Predict):
@@ -32,39 +33,34 @@ class PredictBatchFile(Predict):
             zip_ref.extractall(unzip_path)
         
         dir_source = unzip_path
-        file_list = os.listdir(dir_source)
-        
-        # Dealing with nested folder in the zip file, need to search better methods to do so
-        if file_list[0].endswith('/'):
-            file_list = os.listdir(
-                os.path.join(
-                    unzip_path,
-                    file_list[0],
-                )
-            )
 
-            dir_source = os.path.join(dir_source, file_list[0])
+        for root, dirs, files in os.walk(dir_source):
+            for file in files:
+                continue
+            for dir in dirs:
+                # Can be modified just in case we want to have multiple dirs
+                dir_source = os.path.join(root, dir)
+                file_list = os.listdir(dir_source)
+                break
 
-        # for _file in file_list:
-        #     _file_path = self.process_file()
+        for _file in file_list:
+            file_path = os.path.join(dir_source, _file)
+            jpg_path = self.process_dicom(file_path, dir_source, _file)
+            os.remove(file_path + '.dcm')
+            img_array = self.load_and_preprocess_image(jpg_path)
+            prediction = self.model.predict(img_array)
+            predicted_label = self.class_mappings[np.argmax(prediction)]
+            self.results.append({'filename': _file, 'prediction': predicted_label})
 
-        # with ZipFile(zip_path, 'r') as zip_ref:
-        #     for zip_info in zip_ref.namelist():
-        #         if zip_info.endswith('/'):
-        #             continue
-        #         with zip_ref.open(zip_info) as img_file:
-        #             if zip_info.endswith('.dcm'):
-        #                 img_file = dicom2jpg.dicom2jpg(img_file)
-        #             result = self.getPrediction(img_file)
-        #             self.results.append({'filename': zip_info, 'prediction': result})
-        self._prediction_handler()
+        # return self._prediction_handler()
         return self.verdict
-
+    
+    # Handle the prediction logic here
     def _prediction_handler(self):
         dict_counter = {
             'Glioma': 0,
             'Meningioma': 0,
-            'NoTumor': 0,
+            'Notumor': 0,
             'Pituitary': 0,
         }
 
@@ -72,3 +68,4 @@ class PredictBatchFile(Predict):
             dict_counter[result['prediction']] += 1
 
         self.verdict = max(dict_counter, key=dict_counter.get)
+        return dict_counter

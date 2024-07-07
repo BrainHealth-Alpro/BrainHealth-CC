@@ -18,35 +18,41 @@ class Predict:
 
         # Check if the file is dicom and process
         if self.is_dicom_by_magic_number(file_name):
-            if not file_name.endswith('.dcm'):
-                new_file_name = file_name + '.dcm'
-                os.rename(file_name, new_file_name)
-                file_name = new_file_name
-            ndarray = dicom2jpg.dicom2img(file_name)
-            file = Image.fromarray(ndarray)
-            file_ext = '.jpg'
+            return self.process_dicom(file_name, upload_dir, upload_name)
         else:
             file_ext = os.path.splitext(file_name)[1]
-            with open(file_name, 'r') as f:
+            with open(file_name, 'rb') as f:
                 file = f.read()
+            return self._save_binary(file, file_ext, upload_dir, upload_name)
+        
+    def process_dicom(self, file_name, upload_dir, upload_name):
+        if not file_name.endswith('.dcm'):
+            new_file_name = file_name + '.dcm'
+            os.rename(file_name, new_file_name)
+            file_name = new_file_name
+        ndarray = dicom2jpg.dicom2img(file_name)
+        file = Image.fromarray(ndarray)
+        file_ext = '.jpg'
+        return self._save_image(file, file_ext, upload_dir, upload_name)
+    
+    def get_prediction_from_file(self, file):
+        file_temp = self._temp_file(file)
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'img')
+        return self.predict_util(file_temp, upload_dir)
 
-        return self._save(file, file_ext, upload_dir)
-
+    def predict_util(self, file, upload_dir):
+        filepath = self.process_file(file, upload_dir)
+        img_array = self.load_and_preprocess_image(filepath)
+        prediction = self.model.predict(img_array)
+        predicted_label = self.class_mappings[np.argmax(prediction)]
+        return predicted_label
+    
     def load_and_preprocess_image(self, image_path, image_shape=(168, 168)):
         img = image.load_img(image_path, target_size=image_shape, color_mode='grayscale')
         img_array = image.img_to_array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
         return img_array
     
-    def getPrediction(self, file):
-        file_temp = self._temp_file(file)
-        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'img')
-        filepath = self.process_file(file_temp, upload_dir)
-        img_array = self.load_and_preprocess_image(filepath)
-        prediction = self.model.predict(img_array)
-        predicted_label = self.class_mappings[np.argmax(prediction)]
-        return predicted_label
-
     def is_dicom_by_magic_number(self, file):
         try:
             with open(file, 'rb') as f:
@@ -60,13 +66,23 @@ class Predict:
         temp_name = os.path.join(temp_dir, file.filename)
         file.save(temp_name)
         return temp_name
-    
-    def _save(self, file, ext, upload_dir, upload_name=''):
+
+    def _save_image(self, file, ext, upload_dir, upload_name=''):
         if upload_name == '':
             filepath = os.path.join(upload_dir, datetime.now().strftime('%Y%m%d%H%M%S') + ext)
         else:
             filepath = os.path.join(upload_dir, upload_name + ext)
         
         file.save(filepath)
+        return filepath
+
+    def _save_binary(self, file_content, ext, upload_dir, upload_name=''):
+        if upload_name == '':
+            filename = datetime.now().strftime('%Y%m%d%H%M%S') + ext
+        else:
+            filename = upload_name + ext
+        filepath = os.path.join(upload_dir, filename)
+        with open(filepath, 'wb') as f:
+            f.write(file_content)
         return filepath
     

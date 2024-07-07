@@ -17,5 +17,5 @@ class Predict(Resource):
         file = args['file']
         if file.filename == '':
             abort(400, 'No selected file')
-        result = model.getPrediction(file)
+        result = model.get_prediction_from_file(file)
         return jsonify({"result": result})
