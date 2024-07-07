@@ -34,8 +34,7 @@ class Riwayat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nama_lengkap_pasien = db.Column(db.String(80), nullable=False)
     hasil = db.Column(db.String(30), nullable=False) # Tidak ada tumor | Terdapat tumor terdeteksi
-    tanggal = db.Column(db.Date, nullable=False)
-    waktu = db.Column(db.Time, nullable=False)
+    datetime = db.Column(db.DateTime, nullable=False)
     gambar = db.Column(db.String(255), nullable=False) # bisa hyperlink atau internal path ke file
     tumor_id = db.Column(db.Integer, db.ForeignKey('tumor.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
