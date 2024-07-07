@@ -10,11 +10,15 @@ from flask_migrate import Migrate
 
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect, generate_csrf, validate_csrf
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, DateTimeField, IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo
 
 import secrets
 import os
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -25,7 +29,7 @@ csrf = CSRFProtect(app)
 
 
 from app import app, db
-from models import User
+from models import User, Riwayat, Tumor
 
 @app.route('/')
 def index():
@@ -116,6 +120,67 @@ def login():
             for error in errors_list:
                 errors.append(f'{field}: {error}')
         return jsonify({'message': 'Validation failed', 'errors': errors}), 400
+
+
+class HistoryForm(FlaskForm):
+    nama_lengkap_pasien = StringField('Nama Lengkap Pasien', validators=[DataRequired()])
+    hasil = StringField('Hasil', validators=[DataRequired()])
+    datetime = DateTimeField('Datetime', validators=[DataRequired()])
+    gambar = StringField('Gambar', validators=[DataRequired()])
+    tumor_id = IntegerField('Tumor ID', validators=[DataRequired()])
+    user_id = IntegerField('User ID', validators=[DataRequired()])
+    submit = SubmitField('Catat History')
+    
+
+@app.route('/history', methods=['POST'])
+def post_history():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'message': 'Invalid JSON'}), 400
+
+    required_fields = ['nama_lengkap_pasien', 'hasil', 'datetime', 'gambar', 'tumor_id', 'user_id']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'message': f'Missing required field: {field}'}), 400
+
+    form = HistoryForm(data=data)
+
+    if form.validate():
+        nama_lengkap_pasien = form.nama_lengkap_pasien.data
+        hasil = form.hasil.data
+        datetime = form.datetime.data
+        gambar = form.gambar.data
+        tumor_id = form.tumor_id.data
+        user_id = form.user_id.data
+
+        # Create a new history
+        new_history = Riwayat(nama_lengkap_pasien=nama_lengkap_pasien, hasil=hasil, datetime=datetime, gambar=gambar, tumor_id=tumor_id, user_id=user_id)
+        db.session.add(new_history)
+        db.session.commit()
+
+        return jsonify({'message': 'History added successfully.'}), 201
+    else:
+        errors = []
+        for field, errors_list in form.errors.items():
+            for error in errors_list:
+                errors.append(f'{field}: {error}')
+        return jsonify({'message': 'Validation failed', 'errors': errors}), 400
+    
+
+@app.route('/history', methods=['GET'])
+def get_history():
+    user_id = request.args.get('user_id', '')
+    history = db.session.query(Riwayat, Tumor).join(Tumor).filter(Riwayat.tumor_id == Tumor.id).all()
+    #history = Riwayat.query.filter_by(user_id=user_id).all()
+    
+    if not history:
+        return jsonify({'history': [], 'message': 'History not found.'}), 400
+
+    history_list = [{'id': riwayat.id, 'nama_lengkap_pasien': riwayat.nama_lengkap_pasien,
+                        'hasil': riwayat.hasil, 'datetime': riwayat.datetime,
+                        'gambar': riwayat.gambar, 'jenis_tumor': tumor.nama, 'user_id': riwayat.user_id } for riwayat, tumor in history]
+    return jsonify({'history': history_list}), 200
 
 
 @app.route('/result', methods=['POST'])
