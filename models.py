@@ -1,16 +1,23 @@
 from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nama_lengkap = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     nomor_telepon = db.Column(db.String(20), unique=True, nullable=False)
-    kata_sandi = db.Column(db.String(64), nullable=False)
+    kata_sandi = db.Column(db.Text, nullable=False)
     tipe = db.Column(db.String(6), nullable=False) # dokter | pasien
     riwayat = db.relationship('Riwayat', backref='user', lazy=True)
 
     def __repr__(self):
-        return '<User id=%r nama_lengkap=%r email=%r nomor_telepon=%r kata_sandi=%r tipe=%r>' % self.id, self.nama_lengkap, self.email, self.nomor_telepon, self.kata_sandi, self.tipe
+        return '<User id=%r nama_lengkap=%r email=%r nomor_telepon=%r kata_sandi=%r tipe=%r>' % (self.id, self.nama_lengkap, self.email, self.nomor_telepon, self.kata_sandi, self.tipe)
+    
+    def set_password(self, kata_sandi):
+        self.kata_sandi = generate_password_hash(kata_sandi)
+
+    def check_password(self, kata_sandi):
+        return check_password_hash(self.kata_sandi, kata_sandi)
 
 
 class Tumor(db.Model):
@@ -20,7 +27,7 @@ class Tumor(db.Model):
     riwayat = db.relationship('Riwayat', backref='tumor', lazy=True)
 
     def __repr__(self):
-        return '<Tumor id=%r nama=%r perawatan=%r>' % self.id, self.nama, self.perawatan
+        return '<Tumor id=%r nama=%r perawatan=%r>' % (self.id, self.nama, self.perawatan)
 
 
 class Riwayat(db.Model):
@@ -34,4 +41,4 @@ class Riwayat(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def __repr__(self):
-        return '<Riwayat id=%r nama_lengkap_pasien=%r hasil=%r tanggal=%r waktu=%r gambar=%r tumor_id=%r user_id=%r>' % self.id, self.nama_lengkap_pasien, self.hasil, self.tanggal, self.waktu, self.gambar, self.tumor_id, self.user_id
+        return '<Riwayat id=%r nama_lengkap_pasien=%r hasil=%r tanggal=%r waktu=%r gambar=%r tumor_id=%r user_id=%r>' % (self.id, self.nama_lengkap_pasien, self.hasil, self.tanggal, self.waktu, self.gambar, self.tumor_id, self.user_id)
