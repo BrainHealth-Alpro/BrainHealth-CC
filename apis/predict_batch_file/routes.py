@@ -5,12 +5,12 @@ from apis.predict_batch_file import model
 from werkzeug.datastructures import FileStorage
 from datetime import datetime
 
-ns = Namespace('predict_batch_file', description='predict multiple mri images from a zip file')
+ns = Namespace('api', description='predict multiple mri images from a zip file')
 
 zip_parser = ns.parser()
 zip_parser.add_argument('file', location='files', type=FileStorage, required=True, help='file cannot be empty')
 
-@ns.route('/')
+@ns.route('/predict/batchFile')
 class PredictBatch(Resource):
     @ns.doc('predict_batch_file')
     @ns.expect(zip_parser)
