@@ -5,12 +5,22 @@ from flask import Flask, render_template, request
 from apis import api
 import requests
 import os
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 app = Flask(__name__)
+app.config.from_pyfile('config.py')
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+from app import app, db
+from models import User
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    users = User.query.all()
+    return 'Hello, users: {}'.format(users)
+    #return render_template('index.html')
 
 @app.route('/result', methods=['POST'])
 def predict():
