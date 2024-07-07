@@ -6,3 +6,4 @@ model.h5
 model.keras
 config.py
 env/
+.env
