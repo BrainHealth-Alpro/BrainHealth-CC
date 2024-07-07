@@ -8,4 +8,4 @@ api = Api(
     doc='/api/documentation/'
 )
 
-api.add_namespace(api_predict, path='/api/predict')
+api.add_namespace(api_predict)
