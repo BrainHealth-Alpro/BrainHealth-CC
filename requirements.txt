@@ -7,3 +7,7 @@ numpy
 gevent
 gunicorn
 requests
+psycopg2
+sqlalchemy
+flask_sqlalchemy
+flask_migrate
