@@ -15,6 +15,12 @@ class PredictBatchFile(Predict):
         self.results = []
         self.verdict = ''
 
+    def batch_processing(self, file):
+        zip_path = self.process_zip(file)
+        self.extract_and_assign_diagnosis(zip_path)
+        self.count_diagnosis()
+        return self.verdict
+
     def process_zip(self, file):
         # Make a temporary dir to upload the zip file
         temp_dir = tempfile.mkdtemp()
@@ -24,9 +30,7 @@ class PredictBatchFile(Predict):
 
         return filepath
 
-    def batch_processing(self, file):
-        zip_path = self.process_zip(file)
-
+    def extract_and_assign_diagnosis(self, zip_path):
         unzip_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'zip', datetime.now().strftime('%Y%m%d%H%M%S'))
 
         with ZipFile(zip_path, 'r') as zip_ref:
@@ -51,12 +55,9 @@ class PredictBatchFile(Predict):
             prediction = self.model.predict(img_array)
             predicted_label = self.class_mappings[np.argmax(prediction)]
             self.results.append({'filename': _file, 'prediction': predicted_label})
-
-        # return self._prediction_handler()
-        return self.verdict
     
     # Handle the prediction logic here
-    def _prediction_handler(self):
+    def count_diagnosis(self):
         dict_counter = {
             'Glioma': 0,
             'Meningioma': 0,
@@ -68,4 +69,3 @@ class PredictBatchFile(Predict):
             dict_counter[result['prediction']] += 1
 
         self.verdict = max(dict_counter, key=dict_counter.get)
-        return dict_counter
