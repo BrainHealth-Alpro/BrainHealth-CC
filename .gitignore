@@ -7,3 +7,4 @@ model.keras
 config.py
 env/
 .env
+uploads
