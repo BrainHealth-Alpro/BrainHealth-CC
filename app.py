@@ -1,12 +1,25 @@
+import logging
+from logging.handlers import RotatingFileHandler
+
 from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, render_template, request
 from apis import api
+from config import DevelopmentConfig, ProductionConfig
 import requests
 import os
 
 app = Flask(__name__)
+
+app.config.from_object(DevelopmentConfig)
+# # Uncomment below for production
+# app.config.from_object(ProductionConfig)
+
+# Set logging
+handler = RotatingFileHandler('error.log', maxBytes=1024 * 1024 * 100, backupCount=10)
+handler.setLevel(logging.ERROR)
+app.logger.addHandler(handler)
 
 @app.route('/')
 def index():
@@ -43,4 +56,4 @@ def test():
 
 api.init_app(app)
 
-app.run(debug=True, port=80)
+app.run()
