@@ -1,3 +1,10 @@
+psycopg2
+sqlalchemy
+flask_sqlalchemy
+flask_migrate
+flask_wtf
+email_validator
+python_dotenv
 absl-py==2.1.0
 aniso8601==9.0.1
 astunparse==1.6.3
