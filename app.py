@@ -38,7 +38,7 @@ def index():
 class RegistrationForm(FlaskForm):
     nama_lengkap = StringField('Nama Lengkap', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    nomor_telepon = PasswordField('Nomor Telepon', validators=[DataRequired()])
+    nomor_telepon = StringField('Nomor Telepon', validators=[DataRequired()])
     kata_sandi = PasswordField('Kata Sandi', validators=[DataRequired(), EqualTo('kata_sandi')])
     tipe = StringField('Tipe', validators=[DataRequired()])
     submit = SubmitField('Buat Akun')
@@ -111,7 +111,7 @@ def login():
     if form.validate():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.kata_sandi.data):
-            return jsonify({'message': 'Login successful', 'email': form.email.data}), 200
+            return jsonify({'message': 'Login successful', 'id': user.id, 'email': form.email.data}), 200
         else:
             return jsonify({'message': 'Email or password is incorrect.'}), 400
     else:
@@ -181,6 +181,79 @@ def get_history():
                         'hasil': riwayat.hasil, 'datetime': riwayat.datetime,
                         'gambar': riwayat.gambar, 'jenis_tumor': tumor.nama, 'user_id': riwayat.user_id } for riwayat, tumor in history]
     return jsonify({'history': history_list}), 200
+
+
+class ProfileForm(FlaskForm):
+    id = IntegerField('ID', validators=[DataRequired()])
+    nama_lengkap = StringField('Nama Lengkap', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    nomor_telepon = StringField('Nomor Telepon', validators=[DataRequired()])
+    foto_profil = StringField('Foto Profil', validators=[DataRequired()])
+    tempat_lahir = StringField('Tempat Lahir', validators=[DataRequired()])
+    tanggal_lahir = StringField('Tanggal Lahir', validators=[DataRequired()])
+    kata_sandi = PasswordField('Kata Sandi', validators=[DataRequired(), EqualTo('kata_sandi')])
+    tipe = StringField('Tipe', validators=[DataRequired()])
+    submit = SubmitField('Update Profile')
+
+
+@app.route('/profile', methods=['POST'])
+def update_profile():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'message': 'Invalid JSON'}), 400
+
+    required_fields = ['id', 'nama_lengkap', 'email', 'nomor_telepon', 'foto_profil', 'tempat_lahir', 'tanggal_lahir', 'kata_sandi', 'tipe']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'message': f'Missing required field: {field}'}), 400
+
+    form = ProfileForm(data=data)
+
+    if form.validate():
+        user = User.query.get(form.id.data)
+        if not user: # seharusnya ngga pernah kejadian gini sih wkwkwk (kecuali ada orang yang pake browser coba2 api kita)
+            return jsonify({'message': 'User not found.'}), 404
+
+        user.nama_lengkap = form.nama_lengkap.data
+        user.email = form.email.data
+        user.nomor_telepon = form.nomor_telepon.data
+        user.foto_profil = form.foto_profil.data
+        user.tempat_lahir = form.tempat_lahir.data
+        user.tanggal_lahir = form.tanggal_lahir.data
+        user.kata_sandi = form.kata_sandi.data
+        user.tipe = form.tipe.data
+
+        db.session.commit()
+
+        return jsonify({'message': 'Profile updated successfully.'}), 200
+    else:
+        errors = []
+        for field, errors_list in form.errors.items():
+            for error in errors_list:
+                errors.append(f'{field}: {error}')
+        return jsonify({'message': 'Validation failed', 'errors': errors}), 400
+    
+
+@app.route('/profile', methods=['GET'])
+def get_profile():
+    user_id = request.args.get('user_id', '')
+    user = db.session.query(User).get(user_id)
+    
+    if not user:
+        return jsonify({'message': 'User not found.'}), 404
+
+    return jsonify({
+        'id': user.id,
+        'nama_lengkap': user.nama_lengkap,
+        'email': user.email,
+        'nomor_telepon': user.nomor_telepon,
+        'foto_profil': user.foto_profil,
+        'tempat_lahir': user.tempat_lahir,
+        'tanggal_lahir': user.tanggal_lahir,
+        'kata_sandi': user.kata_sandi,
+        'tipe': user.tipe,
+    }), 200
 
 
 @app.route('/result', methods=['POST'])

@@ -6,12 +6,15 @@ class User(db.Model):
     nama_lengkap = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     nomor_telepon = db.Column(db.String(20), unique=True, nullable=False)
+    foto_profil = db.Column(db.Text, nullable=True)
+    tempat_lahir = db.Column(db.Text, nullable=True)
+    tanggal_lahir = db.Column(db.Date, nullable=True)
     kata_sandi = db.Column(db.Text, nullable=False)
     tipe = db.Column(db.String(6), nullable=False) # dokter | pasien
     riwayat = db.relationship('Riwayat', backref='user', lazy=True)
 
     def __repr__(self):
-        return '<User id=%r nama_lengkap=%r email=%r nomor_telepon=%r kata_sandi=%r tipe=%r>' % (self.id, self.nama_lengkap, self.email, self.nomor_telepon, self.kata_sandi, self.tipe)
+        return '<User id=%r nama_lengkap=%r email=%r nomor_telepon=%r foto_profil=%r tempat_lahir=%r tanggal_lahir=%r kata_sandi=%r tipe=%r>' % (self.id, self.nama_lengkap, self.email, self.nomor_telepon, self.foto_profil, self.tempat_lahir, self.tanggal_lahir, self.kata_sandi, self.tipe)
     
     def set_password(self, kata_sandi):
         self.kata_sandi = generate_password_hash(kata_sandi)
@@ -35,7 +38,7 @@ class Riwayat(db.Model):
     nama_lengkap_pasien = db.Column(db.String(80), nullable=False)
     hasil = db.Column(db.String(30), nullable=False) # Tidak ada tumor | Terdapat tumor terdeteksi
     datetime = db.Column(db.DateTime, nullable=False)
-    gambar = db.Column(db.String(255), nullable=False) # bisa hyperlink atau internal path ke file
+    gambar = db.Column(db.Text, nullable=False) # bisa hyperlink atau internal path ke file
     tumor_id = db.Column(db.Integer, db.ForeignKey('tumor.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
