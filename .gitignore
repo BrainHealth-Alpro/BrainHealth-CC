@@ -8,3 +8,5 @@ config.py
 env/
 .env
 uploads
+.python-version
+error.log
