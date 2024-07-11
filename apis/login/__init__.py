@@ -1,5 +1,5 @@
-from .utility import Predict
+from .utility import Login
 
-model = Predict()
+login = Login()
 
 from .routes import ns as api

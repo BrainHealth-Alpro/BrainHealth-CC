@@ -1,21 +1,21 @@
-from flask import jsonify, render_template
+from flask import jsonify, request
 from flask_restx import Namespace, Resource, abort
-from apis.predict import model
-from werkzeug.datastructures import FileStorage
+from apis.login import login
 
-ns = Namespace('api', description='predict mri images')
+ns = Namespace('api', description='Login CSRF')
 
-mri_image_parser = ns.parser()
-mri_image_parser.add_argument('file', location='files', type=FileStorage, required=True, help='file cannot be empty')
-
-@ns.route('/predict')
-class Predict(Resource):
-    @ns.doc('predict')
-    @ns.expect(mri_image_parser)
+@ns.route('/login')
+class LoginRoute(Resource):
+    @ns.doc('login')
     def post(self):
-        args = mri_image_parser.parse_args()
-        file = args['file']
-        if file.filename == '':
-            abort(400, 'No selected file')
-        result = model.get_prediction_from_file(file)
-        return jsonify({"result": result})
+        args = request.get_json()
+        if not args:
+            abort(400, 'Invalid JSON')
+
+        required_fields = ['email', 'kata_sandi']
+        for field in required_fields:
+            if field not in args:
+                return jsonify({'message': f'Missing required field: {field}'}), 400
+
+        login.make_form(args)
+        return login.validate_login()
