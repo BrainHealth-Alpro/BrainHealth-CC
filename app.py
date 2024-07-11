@@ -6,7 +6,7 @@ monkey.patch_all()
 
 from flask import Flask, render_template, request
 from apis import api
-from config import DevelopmentConfig, ProductionConfig
+from config import get_config
 import requests
 from flask_migrate import Migrate
 
@@ -19,14 +19,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.config.from_object(DevelopmentConfig)
+# Change development to production for deployment
+app.config.from_object(get_config('development'))
 db = init_db(app)
 migrate = Migrate(app, db)
 csrf = CSRFProtect(app)
-
-app.config.from_object(DevelopmentConfig)
-# # Uncomment below for production
-# app.config.from_object(ProductionConfig)
 
 # Set logging
 handler = RotatingFileHandler('error.log', maxBytes=1024 * 1024 * 100, backupCount=10)

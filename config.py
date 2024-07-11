@@ -14,3 +14,9 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     PORT = 80
+
+def get_config(config_name='production'):
+    if config_name == 'development':
+        return DevelopmentConfig()
+    else
+        return ProductionConfig()
