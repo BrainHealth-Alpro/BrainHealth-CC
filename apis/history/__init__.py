@@ -1,5 +1,5 @@
-from .utility import Profile
+from .utility import History
 
-profile = Profile()
+history = History()
 
 from .routes import ns as api

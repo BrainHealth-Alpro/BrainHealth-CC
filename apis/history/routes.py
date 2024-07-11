@@ -1,30 +1,30 @@
 from flask import jsonify, request
 from flask_restx import Namespace, Resource, abort
-from apis.profile import profile
+from apis.history import history
 from models import User, db
 
-ns = Namespace('api', description='Manage profile')
+ns = Namespace('api', description='Manage history')
 
-@ns.route('/profile')
-class Predict(Resource):
-    @ns.doc('post_profile')
+@ns.route('/history')
+class HistoryRoute(Resource):
+    @ns.doc('post_history')
     def post(self):
         args = request.get_json()
 
         if not args:
             abort(400, 'Invalid JSON')
 
-        required_fields = ['id', 'nama_lengkap', 'email', 'nomor_telepon', 'foto_profil', 'tempat_lahir',
-                           'tanggal_lahir', 'kata_sandi', 'tipe']
+        required_fields = ['nama_lengkap_pasien', 'hasil', 'datetime', 'gambar', 'tumor_id', 'user_id']
+
         for field in required_fields:
             if field not in args:
                 return abort(400, 'Missing required field')
 
-        profile.make_form(args)
-        return profile.post_profile()
+        history.make_form(args)
+        return history.post_history()
 
 
-    @ns.doc('get_profile')
+    @ns.doc('get_history')
     def get(self):
         user_id = request.args.get('user_id', '')
         user = db.session.query(User).get(user_id)
@@ -32,4 +32,4 @@ class Predict(Resource):
         if not user:
             return abort(404, 'User not found.')
 
-        return profile.get_profile(user)
+        return history.get_history(user)

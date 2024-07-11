@@ -1,66 +1,55 @@
 from datetime import datetime
 from flask import jsonify, abort
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, IntegerField
+from wtforms import StringField, SubmitField, IntegerField, DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo
-from models import User, db
+from models import User, Riwayat, Tumor, db
 import os
 
-class ProfileForm(FlaskForm):
-    id = IntegerField('ID', validators=[DataRequired()])
-    nama_lengkap = StringField('Nama Lengkap', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    nomor_telepon = StringField('Nomor Telepon', validators=[DataRequired()])
-    foto_profil = StringField('Foto Profil', validators=[DataRequired()])
-    tempat_lahir = StringField('Tempat Lahir', validators=[DataRequired()])
-    tanggal_lahir = StringField('Tanggal Lahir', validators=[DataRequired()])
-    kata_sandi = PasswordField('Kata Sandi', validators=[DataRequired(), EqualTo('kata_sandi')])
-    tipe = StringField('Tipe', validators=[DataRequired()])
-    submit = SubmitField('Update Profile')
+class HistoryForm(FlaskForm):
+    nama_lengkap_pasien = StringField('Nama Lengkap Pasien', validators=[DataRequired()])
+    hasil = StringField('Hasil', validators=[DataRequired()])
+    datetime = DateTimeField('Datetime', validators=[DataRequired()])
+    gambar = StringField('Gambar', validators=[DataRequired()])
+    tumor_id = IntegerField('Tumor ID', validators=[DataRequired()])
+    user_id = IntegerField('User ID', validators=[DataRequired()])
+    submit = SubmitField('Catat History')
 
-class Profile:
+class History:
     def __init__(self):
         self.form = None
 
-    def post_profile(self):
+    def post_history(self):
         if self.form.validate():
-            user = User.query.get(self.form.id.data)
-            if not user:
-                return jsonify({'message': 'User not found.'}), 404
+            nama_lengkap_pasien = self.form.nama_lengkap_pasien.data
+            hasil = self.form.hasil.data
+            datetime = self.form.datetime.data
+            gambar = self.form.gambar.data
+            tumor_id = self.form.tumor_id.data
+            user_id = self.form.user_id.data
 
-            user.nama_lengkap = self.form.nama_lengkap.data
-            user.email = self.form.email.data
-            user.nomor_telepon = self.form.nomor_telepon.data
-            user.foto_profil = self.form.foto_profil.data
-            user.tempat_lahir = self.form.tempat_lahir.data
-            user.tanggal_lahir = self.form.tanggal_lahir.data
-            user.kata_sandi = self.form.kata_sandi.data
-            user.tipe = self.form.tipe.data
-
+            # Create a new history
+            new_history = Riwayat(nama_lengkap_pasien=nama_lengkap_pasien, hasil=hasil, datetime=datetime,
+                                  gambar=gambar, tumor_id=tumor_id, user_id=user_id)
+            db.session.add(new_history)
             db.session.commit()
 
-            return jsonify({'message': 'Profile updated successfully.'})
+            return jsonify({'message': 'History added successfully.'})
         else:
             errors = []
             for field, errors_list in self.form.errors.items():
                 for error in errors_list:
                     errors.append(f'{field}: {error}')
-            # Gabisa nge return errornya, bingung kyk gimana
-            abort (400, 'Validation failed')
-            # return jsonify({'message': 'Validation failed', 'errors': errors}), 400
+            return jsonify({'message': 'Validation failed', 'errors': errors})
 
-    def get_profile(self, user):
-        return jsonify({
-            'id': user.id,
-            'nama_lengkap': user.nama_lengkap,
-            'email': user.email,
-            'nomor_telepon': user.nomor_telepon,
-            'foto_profil': user.foto_profil,
-            'tempat_lahir': user.tempat_lahir,
-            'tanggal_lahir': user.tanggal_lahir,
-            'kata_sandi': user.kata_sandi,
-            'tipe': user.tipe,
-        })
+    def get_history(self, user):
+        history = db.session.query(Riwayat, Tumor).join(Tumor).filter(Riwayat.tumor_id == Tumor.id).all()
+
+        history_list = [{'id': riwayat.id, 'nama_lengkap_pasien': riwayat.nama_lengkap_pasien,
+                        'hasil': riwayat.hasil, 'datetime': riwayat.datetime,
+                        'gambar': riwayat.gambar, 'jenis_tumor': tumor.nama, 'user_id': riwayat.user_id } for riwayat, tumor in history]
+
+        return jsonify({'history': history_list})
 
     def make_form(self, data):
-        self.form = ProfileForm(data=data)
+        self.form = HistoryForm(data=data)
