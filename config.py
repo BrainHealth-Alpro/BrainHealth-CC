@@ -18,5 +18,5 @@ class ProductionConfig(Config):
 def get_config(config_name='production'):
     if config_name == 'development':
         return DevelopmentConfig()
-    else
+    else:
         return ProductionConfig()
