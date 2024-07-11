@@ -1,32 +1,48 @@
 from flask import jsonify, abort
 from flask_wtf import FlaskForm
-from flask_wtf.csrf import CSRFProtect, generate_csrf, validate_csrf
-from wtforms import StringField, PasswordField, SubmitField, DateTimeField, IntegerField
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
-from models import User
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Email, EqualTo
+from models import User, db
 
-class LoginForm(FlaskForm):
+class RegisterForm(FlaskForm):
+    nama_lengkap = StringField('Nama Lengkap', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
+    nomor_telepon = StringField('Nomor Telepon', validators=[DataRequired()])
     kata_sandi = PasswordField('Kata Sandi', validators=[DataRequired(), EqualTo('kata_sandi')])
-    submit = SubmitField('Masuk')
+    tipe = StringField('Tipe', validators=[DataRequired()])
+    submit = SubmitField('Buat Akun')
 
-class Login():
+class Register():
     def __init__(self):
         self.form = None
 
-    def validate_login(self):
+    def validate_register(self):
         if self.form.validate():
-            user = User.query.filter_by(email=self.form.email.data).first()
-            if user and user.check_password(self.form.kata_sandi.data):
-                return jsonify({'message': 'Login successful', 'id': user.id, 'email': self.form.email.data})
-            else:
-                abort(400, 'Email or password is incorrect')
+            nama_lengkap = self.form.nama_lengkap.data
+            email = self.form.email.data
+            nomor_telepon = self.form.nomor_telepon.data
+            kata_sandi = self.form.kata_sandi.data
+            tipe = self.form.tipe.data
+
+            # Check if the name or email already exists
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                return abort(400, {'message': 'Username or email already exists. Please choose a different one.'})
+
+            # Create a new user
+            new_user = User(nama_lengkap=nama_lengkap, email=email, nomor_telepon=nomor_telepon, kata_sandi=kata_sandi,
+                            tipe=tipe)
+            new_user.set_password(kata_sandi)
+            db.session.add(new_user)
+            db.session.commit()
+
+            return jsonify({'message': 'Registration successful. You can now log in.'})
         else:
             errors = []
-            for field, error_list in self.form.errors.items():
-                for error in error_list:
+            for field, errors_list in self.form.errors.items():
+                for error in errors_list:
                     errors.append(f'{field}: {error}')
-            return abort(400, {'message': 'Login failed', 'errors': errors})
+            return abort(400, ({'message': 'Validation failed', 'errors': errors}))
 
     def make_form(self, data):
-        self.form = LoginForm(data=data)
+        self.form = RegisterForm(data=data)

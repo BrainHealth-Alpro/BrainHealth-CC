@@ -1,5 +1,5 @@
-from .utility import Login
+from .utility import Register
 
-login = Login()
+register = Register()
 
 from .routes import ns as api
