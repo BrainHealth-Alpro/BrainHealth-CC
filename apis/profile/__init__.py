@@ -1,5 +1,5 @@
-from .utility import Predict
+from .utility import Profile
 
-model = Predict()
+profile = Profile()
 
 from .routes import ns as api

@@ -1,88 +1,66 @@
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-from flask import current_app
 from datetime import datetime
-from PIL import Image
-import dicom2jpg
-import tempfile
-import numpy as np
+from flask import jsonify, abort
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField, IntegerField
+from wtforms.validators import DataRequired, Email, EqualTo
+from models import User, db
 import os
 
-class Predict:
+class ProfileForm(FlaskForm):
+    id = IntegerField('ID', validators=[DataRequired()])
+    nama_lengkap = StringField('Nama Lengkap', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    nomor_telepon = StringField('Nomor Telepon', validators=[DataRequired()])
+    foto_profil = StringField('Foto Profil', validators=[DataRequired()])
+    tempat_lahir = StringField('Tempat Lahir', validators=[DataRequired()])
+    tanggal_lahir = StringField('Tanggal Lahir', validators=[DataRequired()])
+    kata_sandi = PasswordField('Kata Sandi', validators=[DataRequired(), EqualTo('kata_sandi')])
+    tipe = StringField('Tipe', validators=[DataRequired()])
+    submit = SubmitField('Update Profile')
+
+class Profile:
     def __init__(self):
-        self.model = load_model('model.h5')
-        self.class_mappings = {0: 'Glioma', 1: 'Meningioma', 2: 'Notumor', 3: 'Pituitary'}
+        self.form = None
 
-    def process_file(self, file_name, upload_dir, upload_name=''):
-        os.makedirs(upload_dir, exist_ok=True)
+    def post_profile(self):
+        if self.form.validate():
+            user = User.query.get(self.form.id.data)
+            if not user:
+                return jsonify({'message': 'User not found.'}), 404
 
-        # Check if the file is dicom and process
-        if self.is_dicom_by_magic_number(file_name):
-            return self.process_dicom(file_name, upload_dir, upload_name)
+            user.nama_lengkap = self.form.nama_lengkap.data
+            user.email = self.form.email.data
+            user.nomor_telepon = self.form.nomor_telepon.data
+            user.foto_profil = self.form.foto_profil.data
+            user.tempat_lahir = self.form.tempat_lahir.data
+            user.tanggal_lahir = self.form.tanggal_lahir.data
+            user.kata_sandi = self.form.kata_sandi.data
+            user.tipe = self.form.tipe.data
+
+            db.session.commit()
+
+            return jsonify({'message': 'Profile updated successfully.'})
         else:
-            file_ext = os.path.splitext(file_name)[1]
-            with open(file_name, 'rb') as f:
-                file = f.read()
-            return self._save_binary(file, file_ext, upload_dir, upload_name)
-        
-    def process_dicom(self, file_name, upload_dir, upload_name):
-        if not file_name.endswith('.dcm'):
-            new_file_name = file_name + '.dcm'
-            os.rename(file_name, new_file_name)
-            file_name = new_file_name
-        ndarray = dicom2jpg.dicom2img(file_name)
-        file = Image.fromarray(ndarray)
-        file_ext = '.jpg'
-        return self._save_image(file, file_ext, upload_dir, upload_name)
-    
-    def get_prediction_from_file(self, file):
-        file_temp = self._temp_file(file)
-        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'img')
-        return self.predict_util(file_temp, upload_dir)
+            errors = []
+            for field, errors_list in self.form.errors.items():
+                for error in errors_list:
+                    errors.append(f'{field}: {error}')
+            # Gabisa nge return errornya, bingung kyk gimana
+            abort (400, 'Validation failed')
+            # return jsonify({'message': 'Validation failed', 'errors': errors}), 400
 
-    def predict_util(self, file, upload_dir):
-        filepath = self.process_file(file, upload_dir)
-        img_array = self.load_and_preprocess_image(filepath)
-        prediction = self.model.predict(img_array)
-        predicted_label = self.class_mappings[np.argmax(prediction)]
-        return predicted_label
-    
-    def load_and_preprocess_image(self, image_path, image_shape=(168, 168)):
-        img = image.load_img(image_path, target_size=image_shape, color_mode='grayscale')
-        img_array = image.img_to_array(img) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
-        return img_array
-    
-    def is_dicom_by_magic_number(self, file):
-        try:
-            with open(file, 'rb') as f:
-                header = f.read(132)
-                return header[128:132] == b'DICM'
-        except IOError:
-            return False
+    def get_profile(self, user):
+        return jsonify({
+            'id': user.id,
+            'nama_lengkap': user.nama_lengkap,
+            'email': user.email,
+            'nomor_telepon': user.nomor_telepon,
+            'foto_profil': user.foto_profil,
+            'tempat_lahir': user.tempat_lahir,
+            'tanggal_lahir': user.tanggal_lahir,
+            'kata_sandi': user.kata_sandi,
+            'tipe': user.tipe,
+        })
 
-    def _temp_file(self, file):
-        temp_dir = tempfile.mkdtemp()
-        temp_name = os.path.join(temp_dir, file.filename)
-        file.save(temp_name)
-        return temp_name
-
-    def _save_image(self, file, ext, upload_dir, upload_name=''):
-        if upload_name == '':
-            filepath = os.path.join(upload_dir, datetime.now().strftime('%Y%m%d%H%M%S') + ext)
-        else:
-            filepath = os.path.join(upload_dir, upload_name + ext)
-        
-        file.save(filepath)
-        return filepath
-
-    def _save_binary(self, file_content, ext, upload_dir, upload_name=''):
-        if upload_name == '':
-            filename = datetime.now().strftime('%Y%m%d%H%M%S') + ext
-        else:
-            filename = upload_name + ext
-        filepath = os.path.join(upload_dir, filename)
-        with open(filepath, 'wb') as f:
-            f.write(file_content)
-        return filepath
-    
+    def make_form(self, data):
+        self.form = ProfileForm(data=data)
