@@ -11,10 +11,12 @@ class Profile:
         self.form = None
         
     def _save_image(self, file, ext, upload_dir, upload_name=''):
+        profile_dir = os.path.join(upload_dir, 'profile_photos')
+        os.makedirs(profile_dir, exist_ok=True)
         if upload_name == '':
-            filepath = os.path.join(upload_dir + '/profile_photos', datetime.now().strftime('%Y%m%d%H%M%S') + ext)
+            filepath = os.path.join(profile_dir, datetime.now().strftime('%Y%m%d%H%M%S') + ext)
         else:
-            filepath = os.path.join(upload_dir + '/profile_photos', upload_name + ext)
+            filepath = os.path.join(profile_dir, upload_name + ext)
         
         file.save(filepath)
         return filepath
