@@ -11,7 +11,7 @@ class Gambar(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.Text, nullable=False)
     user = db.relationship('User', backref='gambar', lazy=True)
-    riwayat = db.relationship('Riwayat', backref='riwayat', lazy=True)
+    riwayat = db.relationship('Riwayat', backref='gambar', lazy=True)
 
     def __repr__(self):
         return '<Gambar id=%r path=%r>' % (self.id, self.path)
