@@ -14,7 +14,7 @@ class ProfileRoute(Resource):
         if not args:
             abort(400, 'Invalid JSON')
 
-        required_fields = ['id', 'nama_lengkap', 'email', 'nomor_telepon', 'foto_profil', 'tempat_lahir',
+        required_fields = ['id', 'nama_lengkap', 'email', 'nomor_telepon', 'gambar_id', 'tempat_lahir',
                            'tanggal_lahir', 'kata_sandi', 'tipe']
         for field in required_fields:
             if field not in args:
