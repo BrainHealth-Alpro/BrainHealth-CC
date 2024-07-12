@@ -57,6 +57,7 @@ pylibjpeg-openjpeg==2.3.0
 PySocks==1.7.1
 python-dotenv==1.0.1
 pytz==2024.1
+rarfile==4.2
 referencing==0.35.1
 requests==2.32.3
 rich==13.7.1
@@ -71,6 +72,7 @@ tensorflow-io-gcs-filesystem==0.37.0
 termcolor==2.4.0
 tqdm==4.66.4
 typing_extensions==4.12.2
+unrar==0.4
 urllib3==2.2.2
 Werkzeug==3.0.3
 wrapt==1.16.0
