@@ -1,12 +1,34 @@
+import logging
+from logging.handlers import RotatingFileHandler
+
 from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, render_template, request
 from apis import api
+from config import get_config
 import requests
+from flask_migrate import Migrate
+
+from flask_wtf.csrf import CSRFProtect
+from models import init_db
 import os
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 app = Flask(__name__)
+# Change development to production for deployment
+app.config.from_object(get_config('development'))
+db = init_db(app)
+migrate = Migrate(app, db)
+csrf = CSRFProtect(app)
+
+# Set logging
+handler = RotatingFileHandler('error.log', maxBytes=1024 * 1024 * 100, backupCount=10)
+handler.setLevel(logging.ERROR)
+app.logger.addHandler(handler)
 
 @app.route('/')
 def index():
@@ -43,4 +65,4 @@ def test():
 
 api.init_app(app)
 
-app.run(debug=True, port=80)
+app.run()

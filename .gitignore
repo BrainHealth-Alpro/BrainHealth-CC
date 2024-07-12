@@ -4,3 +4,9 @@ notebooks/cifar_net.pth
 __pycache__
 model.h5
 model.keras
+config.py
+env/
+.env
+uploads
+.python-version
+error.log
