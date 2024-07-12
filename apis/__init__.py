@@ -8,8 +8,6 @@ from .login import api as api_login
 from .register import api as api_register
 from .profile import api as api_profile
 from .history import api as api_history
-from .gambar import api as api_gambar
-
 api = Api(
     title='BrainHealth API',
     version='1.0',
@@ -24,4 +22,3 @@ api.add_namespace(api_login)
 api.add_namespace(api_register)
 api.add_namespace(api_profile)
 api.add_namespace(api_history)
-api.add_namespace(api_gambar)

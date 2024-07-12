@@ -1,4 +1,4 @@
-from flask import jsonify, render_template
+from flask import jsonify, render_template, request
 from flask_restx import Namespace, Resource, abort
 from apis.predict import model
 from werkzeug.datastructures import FileStorage
@@ -22,5 +22,6 @@ class Predict(Resource):
 
         if file.filename == '':
             abort(400, 'No selected file')
-        result = model.get_prediction_from_file(file, nama_pasien, user_id)
+
+        result = model.get_prediction_from_file(user_id, file, nama_pasien)
         return jsonify({"result": result})

@@ -1,7 +1,7 @@
-import requests
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 from flask import current_app, request, jsonify, session
+from models import Riwayat, Gambar, db
 from datetime import datetime
 from PIL import Image
 import dicom2jpg
@@ -15,48 +15,32 @@ class Predict:
         self.class_mappings = {0: 'Glioma', 1: 'Meningioma', 2: 'Notumor', 3: 'Pituitary'}
         self.filepath = ''
 
-    def get_prediction_from_file(self, file, nama_pasien, user_id):
+    def get_prediction_from_file(self, user_id, file, nama_pasien):
         file_temp = self._temp_file(file)
         upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'img')
         prediction = self.predict_util(file_temp, upload_dir)
         predicted_label = self.class_mappings[prediction]
 
-        csrf_token = self.get_csrf_token()
+        nama_lengkap_pasien = nama_pasien
+        hasil = 'blablabla'
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        header = {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrf_token,
-        }
+        new_gambar = Gambar(path=self.filepath)
+        db.session.add(new_gambar)
+        db.session.commit()
 
-        gambar_url = request.host_url + 'api/gambar'
-        json_data = {
-            "path": self.filepath
-        }
+        gambar_id = new_gambar.id
+        tumor_id = prediction + 1
+        user_id = user_id
 
-        response_gambar = requests.post(gambar_url, json=json_data, headers=header)
-        json_response = response_gambar.json()
+        new_history = Riwayat(nama_lengkap_pasien=nama_lengkap_pasien, hasil=hasil, datetime=date,
+                              gambar_id=gambar_id, tumor_id=tumor_id, user_id=user_id)
 
-        image_id = json_response.get('gambar_id')
-        if predicted_label == 'Notumor':
-            hasil = "Tidak ada tumor terdeteksi"
-        else:
-            hasil = "Terdapat tumor terdeteksi"
+        db.session.add(new_history)
+        db.session.commit()
 
-        history_url = request.host_url + 'api/history'
-        json_data = {
-            "nama_lengkap_pasien": nama_pasien,
-            "hasil": hasil,
-            "jenis_tumor": predicted_label,
-            "datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "gambar_id": image_id,
-            "tumor_id": prediction + 1,
-            "user_id": user_id
-        }
 
-        response_history = requests.post(history_url, json=json_data, headers=header)
-
-        return predicted_label, json_response
-
+        return predicted_label
     def predict_util(self, file, upload_dir):
         self.filepath = self.process_file(file, upload_dir)
         img_array = self.load_and_preprocess_image(self.filepath)
@@ -123,12 +107,3 @@ class Predict:
         with open(filepath, 'wb') as f:
             f.write(file_content)
         return filepath
-
-    def get_csrf_token(self):
-        csrf_url = request.host_url + 'api/csrf'
-        csrf_response = requests.get(csrf_url)
-        csrf_token = csrf_response.json()['csrf_token']
-        return csrf_token
-
-    def post_gambar(self, token):
-        pass
