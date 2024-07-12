@@ -2,6 +2,7 @@ import os
 
 class Config:
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+    PROFILE_PHOTO_FOLDER = os.path.join(os.getcwd(), 'profile_photos')
     MAX_CONTENT_LENGTH = 1024 * 1024 * 1024 # 1 GB
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost/brainhealth'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
