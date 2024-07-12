@@ -11,10 +11,19 @@ class PredictBatchLink(PredictBatchFile):
     def __init__(self):
         super().__init__()
 
-    def batch_processing(self, link):
+    def batch_processing(self, link, user_id, nama_pasien):
         zip_path = self.process_zip(link)
         self.extract_and_assign_diagnosis(zip_path)
         self.count_diagnosis()
+        if self.verdict == 'Glioma':
+            prediction = 0
+        elif self.verdict == 'Meningioma':
+            prediction = 1
+        elif self.verdict == 'Notumor':
+            prediction = 2
+        elif self.verdict == 'Pituitary':
+            prediction = 3
+        self.save_to_db(user_id, nama_pasien, prediction)
         return self.verdict
 
     def process_zip(self, file_id):

@@ -1,6 +1,6 @@
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-from flask import current_app, request, jsonify, session
+from flask import current_app
 from models import Riwayat, Gambar, db
 from datetime import datetime
 from PIL import Image
@@ -15,31 +15,13 @@ class Predict:
         self.class_mappings = {0: 'Glioma', 1: 'Meningioma', 2: 'Notumor', 3: 'Pituitary'}
         self.filepath = ''
 
-    def get_prediction_from_file(self, user_id, file, nama_pasien):
+    def get_prediction_from_file(self, file, user_id, nama_pasien):
         file_temp = self._temp_file(file)
         upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'img')
         prediction = self.predict_util(file_temp, upload_dir)
+        self.save_to_db(user_id, nama_pasien, prediction)
+
         predicted_label = self.class_mappings[prediction]
-
-        nama_lengkap_pasien = nama_pasien
-        hasil = 'blablabla'
-        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        new_gambar = Gambar(path=self.filepath)
-        db.session.add(new_gambar)
-        db.session.commit()
-
-        gambar_id = new_gambar.id
-        tumor_id = prediction + 1
-        user_id = user_id
-
-        new_history = Riwayat(nama_lengkap_pasien=nama_lengkap_pasien, hasil=hasil, datetime=date,
-                              gambar_id=gambar_id, tumor_id=tumor_id, user_id=user_id)
-
-        db.session.add(new_history)
-        db.session.commit()
-
-
         return predicted_label
     def predict_util(self, file, upload_dir):
         self.filepath = self.process_file(file, upload_dir)
@@ -107,3 +89,31 @@ class Predict:
         with open(filepath, 'wb') as f:
             f.write(file_content)
         return filepath
+
+    def save_to_db(self, user_id, nama_pasien, prediction):
+        gambar_id = self._save_gambar_to_db()
+        self._save_history_to_db(user_id, nama_pasien, prediction, gambar_id)
+
+    def _save_gambar_to_db(self):
+        new_gambar = Gambar(path=self.filepath)
+        db.session.add(new_gambar)
+        db.session.commit()
+        return new_gambar.id
+
+    def _save_history_to_db(self, user_id, nama_pasien, prediction, gambar_id):
+        nama_lengkap_pasien = nama_pasien
+        if prediction == 0:
+            hasil = 'Tidak ada tumor terdeteksi'
+        else:
+            hasil = 'Terdapat tumor yang terdeteksi'
+
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        tumor_id = prediction + 1
+        user_id = user_id
+
+        new_history = Riwayat(nama_lengkap_pasien=nama_lengkap_pasien, hasil=hasil, datetime=date,
+                              gambar_id=gambar_id, tumor_id=tumor_id, user_id=user_id)
+
+        db.session.add(new_history)
+        db.session.commit()
