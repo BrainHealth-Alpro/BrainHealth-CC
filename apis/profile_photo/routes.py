@@ -23,7 +23,7 @@ class ProfilePhotoRoute(Resource):
         file_extension = os.path.splitext(filename)[1]
 
         # ini path ke file di storage
-        path = profile_photo._save_image(file, file_extension, 'profile_photos')
+        path = profile_photo._save_image(file, file_extension)
         
         new_gambar = Gambar(path=path)
         db.session.add(new_gambar)
