@@ -1,6 +1,7 @@
+import requests
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-from flask import current_app
+from flask import current_app, request, jsonify, session
 from datetime import datetime
 from PIL import Image
 import dicom2jpg
@@ -12,6 +13,55 @@ class Predict:
     def __init__(self):
         self.model = load_model('model.h5')
         self.class_mappings = {0: 'Glioma', 1: 'Meningioma', 2: 'Notumor', 3: 'Pituitary'}
+        self.filepath = ''
+
+    def get_prediction_from_file(self, file, nama_pasien, user_id):
+        file_temp = self._temp_file(file)
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'img')
+        prediction = self.predict_util(file_temp, upload_dir)
+        predicted_label = self.class_mappings[prediction]
+
+        csrf_token = self.get_csrf_token()
+
+        header = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token,
+        }
+
+        gambar_url = request.host_url + 'api/gambar'
+        json_data = {
+            "path": self.filepath
+        }
+
+        response_gambar = requests.post(gambar_url, json=json_data, headers=header)
+        json_response = response_gambar.json()
+
+        image_id = json_response.get('gambar_id')
+        if predicted_label == 'Notumor':
+            hasil = "Tidak ada tumor terdeteksi"
+        else:
+            hasil = "Terdapat tumor terdeteksi"
+
+        history_url = request.host_url + 'api/history'
+        json_data = {
+            "nama_lengkap_pasien": nama_pasien,
+            "hasil": hasil,
+            "jenis_tumor": predicted_label,
+            "datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "gambar_id": image_id,
+            "tumor_id": prediction + 1,
+            "user_id": user_id
+        }
+
+        response_history = requests.post(history_url, json=json_data, headers=header)
+
+        return predicted_label, json_response
+
+    def predict_util(self, file, upload_dir):
+        self.filepath = self.process_file(file, upload_dir)
+        img_array = self.load_and_preprocess_image(self.filepath)
+        prediction = self.model.predict(img_array)
+        return int(np.argmax(prediction))
 
     def process_file(self, file_name, upload_dir, upload_name=''):
         os.makedirs(upload_dir, exist_ok=True)
@@ -34,18 +84,6 @@ class Predict:
         file = Image.fromarray(ndarray)
         file_ext = '.jpg'
         return self._save_image(file, file_ext, upload_dir, upload_name)
-    
-    def get_prediction_from_file(self, file):
-        file_temp = self._temp_file(file)
-        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'img')
-        return self.predict_util(file_temp, upload_dir)
-
-    def predict_util(self, file, upload_dir):
-        filepath = self.process_file(file, upload_dir)
-        img_array = self.load_and_preprocess_image(filepath)
-        prediction = self.model.predict(img_array)
-        predicted_label = self.class_mappings[np.argmax(prediction)]
-        return predicted_label
     
     def load_and_preprocess_image(self, image_path, image_shape=(168, 168)):
         img = image.load_img(image_path, target_size=image_shape, color_mode='grayscale')
@@ -85,4 +123,12 @@ class Predict:
         with open(filepath, 'wb') as f:
             f.write(file_content)
         return filepath
-    
+
+    def get_csrf_token(self):
+        csrf_url = request.host_url + 'api/csrf'
+        csrf_response = requests.get(csrf_url)
+        csrf_token = csrf_response.json()['csrf_token']
+        return csrf_token
+
+    def post_gambar(self, token):
+        pass

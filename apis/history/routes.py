@@ -14,7 +14,7 @@ class HistoryRoute(Resource):
         if not args:
             abort(400, 'Invalid JSON')
 
-        required_fields = ['nama_lengkap_pasien', 'hasil', 'datetime', 'gambar', 'tumor_id', 'user_id']
+        required_fields = ['nama_lengkap_pasien', 'hasil', 'datetime', 'gambar_id', 'tumor_id', 'user_id']
 
         for field in required_fields:
             if field not in args:
