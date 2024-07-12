@@ -84,4 +84,11 @@ class PredictBatchFile(Predict):
         for result in self.results:
             dict_counter[result['prediction']] += 1
 
-        self.verdict = max(dict_counter, key=dict_counter.get)
+        sum_diagnoses = dict_counter['Glioma'] + dict_counter['Meningioma'] + dict_counter['Notumor'] + dict_counter[
+            'Pituitary']
+
+        if dict_counter['Notumor'] >= 0.9 * sum_diagnoses:
+            self.verdict = 'Notumor'
+        else:
+            dict_counter_no_notumor = {k: v for k, v in dict_counter.items() if k != 'Notumor'}
+            self.verdict = max(dict_counter_no_notumor, key=dict_counter_no_notumor.get)
