@@ -49,18 +49,16 @@ class Profile:
         return jsonify({'message': 'Profile updated successfully.'})
 
     def get_profile(self, user):
-        foto_profil_path = db.query(Gambar).get(user.gambar_id)
+        foto_profil = db.session.query(Gambar).get(user.gambar_id)
+
         return jsonify({
             'id': user.id,
             'nama_lengkap': user.nama_lengkap,
             'email': user.email,
             'nomor_telepon': user.nomor_telepon,
-            'foto_profil_path': foto_profil_path,
+            'foto_profil_path': foto_profil.path,
             'tempat_lahir': user.tempat_lahir,
             'tanggal_lahir': user.tanggal_lahir,
             'kata_sandi': user.kata_sandi,
             'tipe': user.tipe,
         })
-
-    def make_form(self, data):
-        self.form = ProfileForm(data=data)

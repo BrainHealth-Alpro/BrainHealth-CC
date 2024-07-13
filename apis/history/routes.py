@@ -9,7 +9,8 @@ ns = Namespace('api', description='Manage history')
 class HistoryRoute(Resource):
     @ns.doc('get_history')
     def get(self):
-        user_id = request.args.get('user_id', '')
+        args = request.get_json()
+        user_id = args['user_id']
         user = db.session.query(User).get(user_id)
 
         if not user:
