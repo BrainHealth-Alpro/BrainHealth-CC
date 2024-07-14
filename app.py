@@ -10,7 +10,6 @@ from config import get_config
 import requests
 from flask_migrate import Migrate
 
-from flask_wtf.csrf import CSRFProtect
 from models import init_db
 import os
 from dotenv import load_dotenv
@@ -23,7 +22,6 @@ app = Flask(__name__)
 app.config.from_object(get_config('development'))
 db = init_db(app)
 migrate = Migrate(app, db)
-csrf = CSRFProtect(app)
 
 # Set logging
 handler = RotatingFileHandler('error.log', maxBytes=1024 * 1024 * 100, backupCount=10)
