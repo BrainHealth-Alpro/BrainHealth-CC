@@ -18,7 +18,7 @@ class Login():
         if self.form.validate():
             user = User.query.filter_by(email=self.form.email.data).first()
             if user and user.check_password(self.form.kata_sandi.data):
-                return jsonify({'message': 'Login successful', 'id': user.id, 'email': self.form.email.data})
+                return jsonify({'message': 'Login successful', 'id': user.id, 'email': self.form.email.data, 'nama_lengkap': user.nama_lengkap})
             else:
                 abort(400, 'Email or password is incorrect')
         else:
