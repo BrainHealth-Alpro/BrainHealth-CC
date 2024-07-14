@@ -7,6 +7,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost/brainhealth'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+    WTF_CSRF_ENABLED = False
 
 class DevelopmentConfig(Config):
     DEBUG = True
