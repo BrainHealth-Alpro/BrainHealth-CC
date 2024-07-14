@@ -56,7 +56,7 @@ class Profile:
             'nama_lengkap': user.nama_lengkap,
             'email': user.email,
             'nomor_telepon': user.nomor_telepon,
-            'foto_profil_path': foto_profil.path,
+            'foto_profil_path': foto_profil.path if foto_profil else None,
             'tempat_lahir': user.tempat_lahir,
             'tanggal_lahir': user.tanggal_lahir,
             'kata_sandi': user.kata_sandi,
