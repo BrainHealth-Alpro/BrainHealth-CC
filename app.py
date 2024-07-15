@@ -19,7 +19,7 @@ load_dotenv()
 
 app = Flask(__name__)
 # Change development to production for deployment
-app.config.from_object(get_config('development'))
+app.config.from_object(get_config('production'))
 db = init_db(app)
 migrate = Migrate(app, db)
 
