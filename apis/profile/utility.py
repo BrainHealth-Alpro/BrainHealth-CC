@@ -22,27 +22,40 @@ class Profile:
         return filepath
         
 
-    def post_profile(self, id, nama_lengkap, email, nomor_telepon, gambar, filename, tempat_lahir, tanggal_lahir, kata_sandi, tipe, upload_dir):
+    def post_profile(self, id, nama_lengkap, email, nomor_telepon, gambar, tempat_lahir, tanggal_lahir, kata_sandi, tipe, upload_dir):
         user = User.query.get(id)
         if not user:
             return abort(404, "User not found.")
 
-        user.nama_lengkap = nama_lengkap
-        user.email = email
-        user.nomor_telepon = nomor_telepon
+        if nama_lengkap != None:
+            user.nama_lengkap = nama_lengkap
+
+        if email != None:
+            user.email = email
+            
+        if nomor_telepon != None:
+            user.nomor_telepon = nomor_telepon
         
         # impement file saving logic
-        path = self._save_image(gambar, os.path.splitext(filename)[1], upload_dir=upload_dir)
-        
-        new_gambar = Gambar(path=path)
-        db.session.add(new_gambar)
-        db.session.commit()
+        if gambar != None:
+            filename = gambar.filename
+            path = self._save_image(gambar, os.path.splitext(filename)[1], upload_dir=upload_dir)
+            new_gambar = Gambar(path=path)
+            db.session.add(new_gambar)
+            db.session.commit()
+            user.gambar_id = new_gambar.id
 
-        user.gambar_id = new_gambar.id
-        user.tempat_lahir = tempat_lahir
-        user.tanggal_lahir = tanggal_lahir
-        user.set_password(kata_sandi)
-        user.tipe = tipe
+        if tempat_lahir != None:
+            user.tempat_lahir = tempat_lahir
+            
+        if tanggal_lahir != None:
+            user.tanggal_lahir = tanggal_lahir
+            
+        if kata_sandi != None:
+            user.set_password(kata_sandi)
+            
+        if tipe != None:
+            user.tipe = tipe
 
         db.session.commit()
 

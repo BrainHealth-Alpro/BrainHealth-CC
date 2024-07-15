@@ -28,13 +28,12 @@ class ProfileRoute(Resource):
         email = args['email']
         nomor_telepon = args['nomor_telepon']
         gambar = args['gambar']
-        filename = gambar.filename
         tempat_lahir = args['tempat_lahir']
         tanggal_lahir = args['tanggal_lahir']
         kata_sandi = args['kata_sandi']
         tipe = args['tipe']
 
-        return profile.post_profile(id=id, nama_lengkap=nama_lengkap, email=email, nomor_telepon=nomor_telepon, gambar=gambar, filename=filename, tempat_lahir=tempat_lahir, tanggal_lahir=tanggal_lahir, kata_sandi=kata_sandi, tipe=tipe, upload_dir=current_app.config['UPLOAD_FOLDER'])
+        return profile.post_profile(id=id, nama_lengkap=nama_lengkap, email=email, nomor_telepon=nomor_telepon, gambar=gambar, tempat_lahir=tempat_lahir, tanggal_lahir=tanggal_lahir, kata_sandi=kata_sandi, tipe=tipe, upload_dir=current_app.config['UPLOAD_FOLDER'])
 
 
     @ns.doc('get_profile')
