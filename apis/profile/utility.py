@@ -41,7 +41,7 @@ class Profile:
         user.gambar_id = new_gambar.id
         user.tempat_lahir = tempat_lahir
         user.tanggal_lahir = tanggal_lahir
-        user.kata_sandi = kata_sandi
+        user.set_password(kata_sandi)
         user.tipe = tipe
 
         db.session.commit()
