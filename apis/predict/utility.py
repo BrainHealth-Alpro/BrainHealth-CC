@@ -102,7 +102,7 @@ class Predict:
 
     def _save_history_to_db(self, user_id, nama_pasien, prediction, gambar_id):
         nama_lengkap_pasien = nama_pasien
-        if prediction == 0:
+        if prediction == 2: # 2 = Notumor
             hasil = 'Tidak ada tumor terdeteksi'
         else:
             hasil = 'Terdapat tumor yang terdeteksi'
