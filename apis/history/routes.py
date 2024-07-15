@@ -15,4 +15,4 @@ class HistoryRoute(Resource):
         if not user:
             return abort(404, 'User not found.')
 
-        return history.get_history(user)
+        return history.get_history(user_id)

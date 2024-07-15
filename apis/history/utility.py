@@ -5,10 +5,11 @@ class History:
     def __init__(self):
         self.form = None
 
-    def get_history(self, user):
+    def get_history(self, user_id):
         history = db.session.query(Riwayat, Tumor, Gambar) \
             .join(Tumor, Riwayat.tumor_id == Tumor.id) \
             .join(Gambar, Riwayat.gambar_id == Gambar.id) \
+            .filter(Riwayat.user_id == user_id) \
             .all()
 
         history_list = [{'id': riwayat.id, 'nama_lengkap_pasien': riwayat.nama_lengkap_pasien,
