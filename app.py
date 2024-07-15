@@ -4,7 +4,7 @@ from logging.handlers import RotatingFileHandler
 from gevent import monkey
 monkey.patch_all()
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 from apis import api
 from config import get_config
 import requests
@@ -24,8 +24,10 @@ db = init_db(app)
 migrate = Migrate(app, db)
 
 # Set logging
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler = RotatingFileHandler('error.log', maxBytes=1024 * 1024 * 100, backupCount=10)
 handler.setLevel(logging.ERROR)
+handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 
 @app.route('/')
@@ -61,6 +63,23 @@ def test():
     else:
         return 'Test image not found'
 
+@app.route('/uploads/')
+@app.route('/uploads/<path:path>')
+def list_file(path=None):
+    if path is None:
+        files = os.listdir(app.config['UPLOAD_FOLDER'])
+        list_files = [node for node in files]
+    else:
+        full_path = os.path.join(app.config['UPLOAD_FOLDER'], path)
+        if os.path.isfile(full_path):
+            return send_from_directory(app.config['UPLOAD_FOLDER'], path)
+        else:
+            files = os.listdir(full_path)
+            list_files = [node for node in files]
+
+    return render_template('directory_list.html', path=path, list_files=list_files)
+
 api.init_app(app)
 
-app.run()
+if __name__ == "__main__":
+    app.run()
