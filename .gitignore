@@ -7,6 +7,9 @@ model.keras
 config.py
 env/
 .env
+.db_env
 uploads
 .python-version
 error.log
+access.log
+database
