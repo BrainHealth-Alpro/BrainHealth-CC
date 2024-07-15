@@ -3,11 +3,48 @@ version: '3.8'
 services:
   api:
     image: brainhealth-api:latest
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      database:
+        condition: service_healthy
     ports:
       - "80:80"
     volumes:
-      - ./uploads:/app/static
-    restart: always    
+      - ./model.h5:/app/model.h5
+      - ./uploads:/app/uploads
+      - ./profile_photos:/app/profile_photos
+      - ./error.log:/app/error.log
+      - ./access.log:/app/access.log
+    environment:
+      DB_MIGRATE: ${DB_MIGRATE:-false}
+    networks:
+      net:
+        ipv4_address: 10.0.0.10
+  
+  database:
+    image: postgres:alpine
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    volumes:
+      - ./database:/var/lib/postgresql
+    env_file:
+      - .db_env
+    networks:
+      net:
+        ipv4_address: 10.0.0.20
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24

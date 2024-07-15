@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.10.14
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -22,6 +22,13 @@ RUN python3 -m pip install --upgrade pip \
 
 COPY . .
 
+RUN cp .env.example .env && \
+    SECRET_KEY=$(python3 -c "import os; print(os.urandom(24).hex())") && \
+    sed -i "s/^FLASK_SECRET_KEY=.*$/FLASK_SECRET_KEY=${SECRET_KEY}/" .env
+
 EXPOSE 80
 
-CMD ["gunicorn", "--worker-class=gevent", "--workers=3", "-b", "0.0.0.0:80", "app:app"]
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+CMD ["/entrypoint.sh"]

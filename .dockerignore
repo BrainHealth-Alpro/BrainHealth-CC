@@ -1,0 +1,13 @@
+database/
+profile_photos/
+uploads/
+README.md
+LICENSE
+config.example.py
+.gitignore
+.db_env
+.git
+access.log
+error.log
+model.h5
+model.keras
