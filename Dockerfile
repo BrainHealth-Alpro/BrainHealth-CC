@@ -26,7 +26,7 @@ RUN cp .env.example .env && \
     SECRET_KEY=$(python3 -c "import os; print(os.urandom(24).hex())") && \
     sed -i "s/^FLASK_SECRET_KEY=.*$/FLASK_SECRET_KEY=${SECRET_KEY}/" .env
 
-EXPOSE 80
+EXPOSE 5000
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

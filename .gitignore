@@ -11,5 +11,6 @@ env/
 uploads
 .python-version
 error.log
-access.log
 database
+nginx.conf
+nginx_logs

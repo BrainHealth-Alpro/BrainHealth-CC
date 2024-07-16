@@ -8,4 +8,4 @@ else
     echo "Skipping database migration"
 fi
 
-exec gunicorn --worker-class=gevent --workers=3 -b 0.0.0.0:80 app:app --access-logfile access.log
+exec gunicorn --worker-class=gevent --workers=3 -b 0.0.0.0:5000 app:app
