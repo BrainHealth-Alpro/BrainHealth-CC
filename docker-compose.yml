@@ -54,6 +54,19 @@ services:
     networks:
       net:
         ipv4_address: 10.0.0.30
+    
+  backup-db:
+    image: postgres:alpine
+    restart: unless-stopped
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - ./backups:/backups
+    entrypoint: /bin/sh -c "while :; do sh /backup.sh; sleep 3600; done"
+    depends_on:
+      - database
+    networks:
+      net:
+        ipv4_address: 10.0.0.40
 
 networks:
   net:

@@ -12,3 +12,5 @@ model.h5
 model.keras
 nginx.conf
 nginx_logs
+backups
+backup.sh

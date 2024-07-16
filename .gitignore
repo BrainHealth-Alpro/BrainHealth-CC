@@ -14,3 +14,5 @@ error.log
 database
 nginx.conf
 nginx_logs
+backups
+backup.sh
